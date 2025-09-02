@@ -1,9 +1,18 @@
 import tkinter
-import pyautogui
+import random
 
-IMGPATH = './img/frog.jpg'
+IMGPATH = './img/frog.png'
+WINDOW = tkinter.Tk()
 
 def main():
-    print("Hello world")
+    # set the image
+    img = tkinter.PhotoImage(file=IMGPATH)
 
-main() 
+    # make a label
+    label = tkinter.Label(image=img)
+    label.pack()
+
+    # main loop
+    WINDOW.mainloop()
+
+main()
