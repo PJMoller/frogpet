@@ -7,6 +7,7 @@ WINDOW = tkinter.Tk()
 WINDOW.geometry('226x223+'+str(number)+'+100')
 WINDOW.configure(bg='')
 WINDOW.overrideredirect(True)
+WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
 
 def main():
     # set the image
@@ -19,5 +20,4 @@ def main():
     # main loop
     WINDOW.mainloop()
 
-while True:
-    main()
+main()
