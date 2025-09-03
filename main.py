@@ -2,10 +2,11 @@ import tkinter
 import random
 
 number = random.randint(10, 1000)
-
 IMGPATH = './img/frog.png'
 WINDOW = tkinter.Tk()
-WINDOW.geometry('420x420+'+str(number)+'+100')
+WINDOW.geometry('226x223+'+str(number)+'+100')
+WINDOW.configure(bg='')
+WINDOW.overrideredirect(True)
 
 def main():
     # set the image
@@ -18,4 +19,5 @@ def main():
     # main loop
     WINDOW.mainloop()
 
-main()
+while True:
+    main()
