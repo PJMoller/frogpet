@@ -6,6 +6,7 @@ IMGPATH = './img/frog.png'
 WINDOW = tkinter.Tk()
 WINDOW.configure(bg='')
 WINDOW.overrideredirect(True)
+WINDOW.focus_force()
 WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
 
 def move_around():
@@ -23,7 +24,7 @@ def main():
     label.pack()
 
     move_around()
-    
+
     # main loop
     WINDOW.mainloop()
 
