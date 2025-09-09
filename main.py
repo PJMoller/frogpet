@@ -6,6 +6,10 @@ IMGPATH = './img/frog.png'
 
 # initialize window
 WINDOW = tkinter.Tk()
+WINDOW_WIDTH = 226
+WINDOW_HEIGHT = 223
+SCREEN_WIDTH = WINDOW.winfo_screenwidth()
+SCREEN_HEIGHT = WINDOW.winfo_screenheight()
 
 # make it so theres no background
 WINDOW.configure(bg='')
@@ -17,16 +21,28 @@ WINDOW.overrideredirect(True)
 WINDOW.focus_force()
 WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
 
-def move_around():
-    # set random x and y values
-    x = random.randint(10, 1000)
-    y = random.randint(10, 1000)
+# set start location and acceleration
+x = 100
+y = 100
+dx = 3
+dy = 3
 
-    # change the location of the window
-    WINDOW.geometry(f'226x223+{x}+{y}')
+def move_around():
+    global x, y, dx, dy
+
+    # update position
+    x += dx
+    y += dy
+
+    if x <= 0 or x + WINDOW_WIDTH >= SCREEN_WIDTH:
+        dx = -dx
+    if y <= 0 or y + WINDOW_HEIGHT >= SCREEN_HEIGHT:
+        dy = -dy
+
+    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}')
 
     # call the function again after 50ms
-    WINDOW.after(50, move_around)
+    WINDOW.after(20, move_around)
 
 def main():
     # set the image
