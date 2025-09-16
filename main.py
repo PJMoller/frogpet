@@ -1,4 +1,5 @@
 import tkinter
+import os
 
 # image location
 IMGPATH = './img/frog.png'
@@ -31,7 +32,9 @@ IMG = None
 def wake_up():
     global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y
 
-    # set the image
+    if not os.path.exists(IMGPATH):
+        raise FileNotFoundError(f"Image file not found: {IMGPATH}")
+
     IMG = tkinter.PhotoImage(file=IMGPATH)
 
     # Set the width and height
@@ -50,8 +53,12 @@ def wake_up():
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{START_POSITION_X}+{START_POSITION_Y}')
 
 
+def change_behaviour():
+    return
+
 def main():
     wake_up()
+    change_behaviour
 
     # main loop
     WINDOW.mainloop()
