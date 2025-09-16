@@ -1,5 +1,4 @@
 import tkinter
-import random
 
 # image location
 IMGPATH = './img/frog.png'
@@ -22,39 +21,47 @@ WINDOW.focus_force()
 WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
 
 # set start location and acceleration
-x = 100
-y = 100
-dx = 3
-dy = 3
+START_POSITION_X = SCREEN_WIDTH - WINDOW_WIDTH - 50
+START_POSITION_Y = SCREEN_HEIGHT - WINDOW_HEIGHT - 50
+ACCELERATION_SPEED_X = 3
+ACCELERATION_SPEED_Y = 3
 
-def move_around():
-    global x, y, dx, dy
+IMG = None
 
-    # update position
-    x += dx
-    y += dy
 
-    if x <= 0 or x + WINDOW_WIDTH >= SCREEN_WIDTH:
-        dx = -dx
-    if y <= 0 or y + WINDOW_HEIGHT >= SCREEN_HEIGHT:
-        dy = -dy
+def wake_up():
+    global IMG
 
-    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}')
-
-    # call the function again after 50ms
-    WINDOW.after(20, move_around)
-
-def main():
     # set the image
-    img = tkinter.PhotoImage(file=IMGPATH)
+    IMG = tkinter.PhotoImage(file=IMGPATH)
 
     # make a label
-    label = tkinter.Label(image=img, bd=0)
+    label = tkinter.Label(image=IMG, bd=0)
     label.pack()
 
+def move_around():
+    global START_POSITION_X, START_POSITION_Y, ACCELERATION_SPEED_X, ACCELERATION_SPEED_Y
+
+    # update position
+    START_POSITION_X += ACCELERATION_SPEED_X
+    START_POSITION_Y += ACCELERATION_SPEED_Y
+
+    if START_POSITION_X <= 0 or START_POSITION_X + WINDOW_WIDTH >= SCREEN_WIDTH:
+        ACCELERATION_SPEED_X = -ACCELERATION_SPEED_X
+    if START_POSITION_Y <= 0 or START_POSITION_Y + WINDOW_HEIGHT >= SCREEN_HEIGHT:
+        ACCELERATION_SPEED_Y = -ACCELERATION_SPEED_Y
+
+    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{START_POSITION_X}+{START_POSITION_Y}')
+
+    # call the function again after 50ms
+    WINDOW.after(50, move_around)
+
+def main():
+    wake_up()
     move_around()
 
     # main loop
     WINDOW.mainloop()
 
-main()
+if __name__ == "__main__":
+    main()
