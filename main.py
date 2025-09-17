@@ -1,10 +1,10 @@
 import tkinter
-from os import path
+import os
 from PIL import Image, ImageTk  
 
 # image location
-IMGPATH_FROG = './img/frog.png'
-IMGPATH_BUBBLE = './img/bubble.png'
+IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
+IMGPATH_BUBBLE = os.path.join(os.path.dirname(__file__), 'img', 'bubble.png')
 
 # initialize window
 WINDOW = tkinter.Tk()
@@ -40,7 +40,7 @@ BUBBLE_WINDOW = None
 def wake_up():
     global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y, CURRENT_POSITION_X, CURRENT_POSITION_Y
 
-    if not path.exists(IMGPATH_FROG):
+    if not os.path.exists(IMGPATH_FROG):
         raise FileNotFoundError(f"Image file not found: {IMGPATH_FROG}")
 
     IMG = tkinter.PhotoImage(file=IMGPATH_FROG)
@@ -67,7 +67,7 @@ def wake_up():
 def chatbubble():
     global BUBBLE_IMG, BUBBLE_WINDOW
 
-    if not path.exists(IMGPATH_BUBBLE):
+    if not os.path.exists(IMGPATH_BUBBLE):
         raise FileNotFoundError(f"Image file not found: {IMGPATH_BUBBLE}")
 
     # Create a second window
@@ -98,12 +98,14 @@ def change_behaviour():
     return
 
 def main(): 
-    wake_up()
-    chatbubble()
-    change_behaviour()
-
-    # main loop
-    WINDOW.mainloop()
+    try:
+        wake_up()
+        chatbubble()
+        change_behaviour()
+        WINDOW.mainloop()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        input("Press Enter to exit...")  # Keeps the window open until user presses Enter
 
 if __name__ == "__main__":
     main()
