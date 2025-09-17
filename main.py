@@ -1,8 +1,9 @@
 import tkinter
-import os
+from os import path
 
 # image location
-IMGPATH = './img/frog.png'
+IMGPATH_FROG = './img/frog.png'
+IMGPATH_BUBBLE = './img/frog.png'
 
 # initialize window
 WINDOW = tkinter.Tk()
@@ -32,10 +33,10 @@ IMG = None
 def wake_up():
     global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y
 
-    if not os.path.exists(IMGPATH):
-        raise FileNotFoundError(f"Image file not found: {IMGPATH}")
+    if not path.exists(IMGPATH_FROG):
+        raise FileNotFoundError(f"Image file not found: {IMGPATH_FROG}")
 
-    IMG = tkinter.PhotoImage(file=IMGPATH)
+    IMG = tkinter.PhotoImage(file=IMGPATH_FROG)
 
     # Set the width and height
     WINDOW_WIDTH = IMG.width()
@@ -53,12 +54,16 @@ def wake_up():
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{START_POSITION_X}+{START_POSITION_Y}')
 
 
+def chatbubble():
+    return
+
 def change_behaviour():
     return
 
-def main():
+def main(): 
     wake_up()
-    change_behaviour
+    chatbubble()
+    change_behaviour()
 
     # main loop
     WINDOW.mainloop()
