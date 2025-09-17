@@ -1,9 +1,10 @@
 import tkinter
 from os import path
+from PIL import Image, ImageTk  
 
 # image location
 IMGPATH_FROG = './img/frog.png'
-IMGPATH_BUBBLE = './img/frog.png'
+IMGPATH_BUBBLE = './img/bubble.png'
 
 # initialize window
 WINDOW = tkinter.Tk()
@@ -26,12 +27,18 @@ WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
 START_POSITION_X = 0
 START_POSITION_Y = 0
 
+# Keep track of current location
+CURRENT_POSITION_X = 0
+CURRENT_POSITION_Y = 0
+
 # Image initilization
 IMG = None
+BUBBLE_IMG = None
+BUBBLE_WINDOW = None
 
 # Start the program by setting all the values to what they should be
 def wake_up():
-    global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y
+    global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y, CURRENT_POSITION_X, CURRENT_POSITION_Y
 
     if not path.exists(IMGPATH_FROG):
         raise FileNotFoundError(f"Image file not found: {IMGPATH_FROG}")
@@ -50,12 +57,42 @@ def wake_up():
     label = tkinter.Label(image=IMG, bd=0)
     label.pack()
 
+    CURRENT_POSITION_X = START_POSITION_X
+    CURRENT_POSITION_Y = START_POSITION_Y
+
     # Set the location
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{START_POSITION_X}+{START_POSITION_Y}')
 
 
 def chatbubble():
-    return
+    global BUBBLE_IMG, BUBBLE_WINDOW
+
+    if not path.exists(IMGPATH_BUBBLE):
+        raise FileNotFoundError(f"Image file not found: {IMGPATH_BUBBLE}")
+
+    # Create a second window
+    BUBBLE_WINDOW = tkinter.Toplevel(WINDOW)
+    BUBBLE_WINDOW.overrideredirect(True)
+    BUBBLE_WINDOW.focus_force()
+    BUBBLE_WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
+
+    # Make it so the background is transparent
+    pil_image = Image.open(IMGPATH_BUBBLE).convert("RGBA")
+    BUBBLE_IMG = ImageTk.PhotoImage(pil_image)
+
+    # Position on bases on frog location
+    bubble_x = CURRENT_POSITION_X - 130
+    bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
+
+    # Set label
+    label = tkinter.Label(BUBBLE_WINDOW, image=BUBBLE_IMG, bg='black', bd=0) 
+    label.pack()
+
+    # Place window
+    BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
+
+    # Make black transparent
+    BUBBLE_WINDOW.wm_attributes('-transparentcolor', 'black')
 
 def change_behaviour():
     return
