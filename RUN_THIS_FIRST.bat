@@ -1,55 +1,81 @@
 @echo off
-setlocal ENABLEEXTENSIONS
+setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
 echo ----------------------------------------
 echo Python and pip Setup Checker
 echo ----------------------------------------
 
-:: Temporarily disable Windows Store redirect by checking what 'where python' returns
-where python > "%TEMP%\python_path.txt" 2>&1
-
-setlocal enabledelayedexpansion
 set "PYTHON_PATH="
-for /f "usebackq delims=" %%A in ("%TEMP%\python_path.txt") do (
-    set "line=%%A"
-    :: Check if line contains 'python.exe' but not WindowsApps (the store redirect folder)
-    echo !line! | find /i "python.exe" >nul
-    if !errorlevel! == 0 (
-        echo !line! | find /i "WindowsApps" >nul
-        if !errorlevel! NEQ 0 (
-            set "PYTHON_PATH=!line!"
-            goto :found_python
+set "PIP_PATH="
+
+:: --- Try registry (real Python installs) ---
+for %%K in ("HKCU\Software\Python\PythonCore" "HKLM\Software\Python\PythonCore") do (
+    for /f "tokens=1" %%V in ('reg query %%K 2^>nul ^| findstr /R "\\[0-9][0-9.]*$"') do (
+        for /f "tokens=2*" %%I in ('reg query "%%V\InstallPath" /ve 2^>nul ^| findstr /R "REG_SZ"') do (
+            if exist "%%J\python.exe" (
+                set "PYTHON_PATH=%%J\python.exe"
+                goto :check_pip
+            )
         )
     )
 )
 
-:: If no valid python.exe found
-echo ERROR: Python executable not found or points to Windows Store app.
-echo Please install Python from https://www.python.org/downloads/
-echo Make sure to add Python to your system PATH.
-echo.
-pause
-exit /b 1
+:: --- Try PATH search (python, python3, py) but skip Store version ---
+for %%P in (python python3 py) do (
+    for /f "delims=" %%A in ('where %%P 2^>nul') do (
+        echo %%A | find /i "WindowsApps" >nul
+        if !errorlevel! == 0 (
+            rem skip
+        ) else (
+            echo %%A | find /i "PythonSoftwareFoundation.Python.3" >nul
+            if !errorlevel! == 0 (
+                rem skip
+            ) else (
+                set "PYTHON_PATH=%%A"
+                goto :check_pip
+            )
+        )
+    )
+)
 
-:found_python
-echo Found Python at: %PYTHON_PATH%
-echo.
-
-:: Check pip availability
-"%PYTHON_PATH%" -m pip --version >nul 2>nul
-IF %ERRORLEVEL% NEQ 0 (
-    echo ERROR: pip not available through Python.
-    echo Try running: python -m ensurepip --upgrade
-    echo Or reinstall Python with pip support.
+:check_pip
+if not defined PYTHON_PATH (
+    echo ERROR: No valid Python installation found.
+    echo Please install Python from https://www.python.org/downloads/
     echo.
     pause
     exit /b 1
 )
 
-:: Install required libraries
+echo Found Python at: %PYTHON_PATH%
+echo.
+
+:: --- Try to find pip.exe directly ---
+for /f "delims=" %%A in ('where pip 2^>nul') do (
+    set "PIP_PATH=%%A"
+    goto :found_pip_exe
+)
+
+:: --- Fall back to python -m pip ---
+"%PYTHON_PATH%" -m pip --version >nul 2>nul
+if %ERRORLEVEL% NEQ 0 (
+    echo ERROR: pip not available through this Python.
+    echo Please install pip or use Python from python.org.
+    echo.
+    pause
+    exit /b 1
+)
+set "PIP_PATH=%PYTHON_PATH% -m pip"
+goto :install_reqs
+
+:found_pip_exe
+echo Found pip at: %PIP_PATH%
+echo.
+
+:install_reqs
 echo Installing Python libraries from requirements.txt...
-"%PYTHON_PATH%" -m pip install --upgrade pip
-"%PYTHON_PATH%" -m pip install -r requirements.txt
+%PIP_PATH% install --upgrade pip
+%PIP_PATH% install -r requirements.txt
 
 IF %ERRORLEVEL% NEQ 0 (
     echo ERROR: Failed to install required libraries.
