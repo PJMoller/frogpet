@@ -36,6 +36,9 @@ IMG = None
 BUBBLE_IMG = None
 BUBBLE_WINDOW = None
 
+WINDOW.wm_attributes("-topmost", True)
+
+
 # Start the program by setting all the values to what they should be
 def wake_up():
     global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y, CURRENT_POSITION_X, CURRENT_POSITION_Y
@@ -75,6 +78,7 @@ def chatbubble():
     BUBBLE_WINDOW.overrideredirect(True)
     BUBBLE_WINDOW.focus_force()
     BUBBLE_WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
+    BUBBLE_WINDOW.wm_attributes("-topmost", True)
 
     # Make it so the background is transparent
     pil_image = Image.open(IMGPATH_BUBBLE).convert("RGBA")
