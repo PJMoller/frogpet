@@ -1,9 +1,14 @@
 import tkinter
 import os
-from PIL import Image, ImageTk  
+from PIL import Image, ImageTk 
+
+SKIN_ENABLED = 1
 
 # image location
-IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
+if SKIN_ENABLED == 0:
+    IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
+else:
+    IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frogskin.png')
 IMGPATH_BUBBLE = os.path.join(os.path.dirname(__file__), 'img', 'bubble.png')
 
 # initialize window
@@ -109,7 +114,7 @@ def main():
         WINDOW.mainloop()
     except Exception as e:
         print(f"An error occurred: {e}")
-        input("Press Enter to exit...")  # Keeps the window open until user presses Enter
+        input("Press Enter to exit...")
 
 if __name__ == "__main__":
     main()
