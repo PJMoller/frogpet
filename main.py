@@ -2,7 +2,7 @@ import tkinter
 import os
 from PIL import Image, ImageTk 
 
-SKIN_ENABLED = 1
+SKIN_ENABLED = 0
 
 # image location
 if SKIN_ENABLED == 0:
