@@ -87,7 +87,7 @@ def chatbubble():
     BUBBLE_IMG = ImageTk.PhotoImage(pil_image)
 
     # Position on bases on frog location
-    bubble_x = CURRENT_POSITION_X - 130
+    bubble_x = CURRENT_POSITION_X - 50
     bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
 
     # Set label
