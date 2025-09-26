@@ -2,13 +2,7 @@ import tkinter
 import os
 from PIL import Image, ImageTk 
 
-SKIN_ENABLED = 0
-
-# image location
-if SKIN_ENABLED == 0:
-    IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
-else:
-    IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frogskin.png')
+IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
 IMGPATH_BUBBLE = os.path.join(os.path.dirname(__file__), 'img', 'bubble.png')
 
 # initialize window
@@ -61,8 +55,8 @@ def wake_up():
     START_POSITION_X = SCREEN_WIDTH - WINDOW_WIDTH - 50
     START_POSITION_Y = SCREEN_HEIGHT - WINDOW_HEIGHT - 50
 
-    # make a label
-    label = tkinter.Label(image=IMG, bd=0)
+    # make a label with a white background
+    label = tkinter.Label(image=IMG, bg='white', bd=0)
     label.pack()
 
     CURRENT_POSITION_X = START_POSITION_X
@@ -70,6 +64,9 @@ def wake_up():
 
     # Set the location
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{START_POSITION_X}+{START_POSITION_Y}')
+
+    # Make white transparent
+    WINDOW.wm_attributes('-transparentcolor', 'white')
 
 
 def chatbubble():
