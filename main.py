@@ -1,5 +1,6 @@
 import tkinter
 import os
+import random
 from PIL import Image, ImageTk 
 
 IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
@@ -22,7 +23,7 @@ WINDOW.overrideredirect(True)
 WINDOW.focus_force()
 WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
 
-# set start location and acceleration
+# set start location
 START_POSITION_X = 0
 START_POSITION_Y = 0
 
@@ -30,13 +31,16 @@ START_POSITION_Y = 0
 CURRENT_POSITION_X = 0
 CURRENT_POSITION_Y = 0
 
-# Image initilization
+# Movement state
+CURRENT_BEHAVIOR = "idle"  # "idle", "walk_left", "walk_right"
+SPEED = 3  # pixels per movement step
+
+# Image initialization
 IMG = None
 BUBBLE_IMG = None
 BUBBLE_WINDOW = None
 
 WINDOW.wm_attributes("-topmost", True)
-
 
 # Start the program by setting all the values to what they should be
 def wake_up():
@@ -86,7 +90,7 @@ def chatbubble():
     pil_image = Image.open(IMGPATH_BUBBLE).convert("RGBA")
     BUBBLE_IMG = ImageTk.PhotoImage(pil_image)
 
-    # Position on bases on frog location
+    # Position based on frog location
     bubble_x = CURRENT_POSITION_X - 50
     bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
 
@@ -100,14 +104,40 @@ def chatbubble():
     # Make black transparent
     BUBBLE_WINDOW.wm_attributes('-transparentcolor', 'black')
 
+
 def change_behaviour():
-    return
+    """Randomly switch between idle, walking left, or walking right."""
+    global CURRENT_BEHAVIOR
+    CURRENT_BEHAVIOR = random.choice(["idle", "walk_left", "walk_right"])
+    print(f"New behavior: {CURRENT_BEHAVIOR}")  # Debug log
+
+    # Schedule the next behavior change in 3-6 seconds
+    WINDOW.after(random.randint(3000, 6000), change_behaviour)
+
+
+def move_frog():
+    """Move the frog smoothly based on current behavior."""
+    global CURRENT_POSITION_X
+
+    if CURRENT_BEHAVIOR == "walk_left":
+        CURRENT_POSITION_X = max(0, CURRENT_POSITION_X - SPEED)
+    elif CURRENT_BEHAVIOR == "walk_right":
+        CURRENT_POSITION_X = min(SCREEN_WIDTH - WINDOW_WIDTH, CURRENT_POSITION_X + SPEED)
+    # if idle, don't move
+
+    # Update window position
+    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
+
+    # Schedule the next frame
+    WINDOW.after(50, move_frog)  # Runs about 20 frames per second
+
 
 def main(): 
     try:
         wake_up()
         chatbubble()
-        change_behaviour()
+        change_behaviour()  # Start behavior switching
+        move_frog()         # Start movement loop
         WINDOW.mainloop()
     except Exception as e:
         print(f"An error occurred: {e}")
