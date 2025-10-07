@@ -123,7 +123,11 @@ def move_frog():
         CURRENT_POSITION_X = max(0, CURRENT_POSITION_X - SPEED)
     elif CURRENT_BEHAVIOR == "walk_right":
         CURRENT_POSITION_X = min(SCREEN_WIDTH - WINDOW_WIDTH, CURRENT_POSITION_X + SPEED)
-    # if idle, don't move
+
+    # Make bubble follow frog
+    bubble_x = CURRENT_POSITION_X - 50
+    bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
+    BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
 
     # Update window position
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
