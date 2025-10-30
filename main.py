@@ -1,119 +1,136 @@
 import tkinter
 import os
 import random
-from PIL import Image, ImageTk 
+from PIL import Image, ImageTk
 
-IMGPATH_FROG = os.path.join(os.path.dirname(__file__), 'img', 'frog.png')
-IMGPATH_BUBBLE = os.path.join(os.path.dirname(__file__), 'img', 'bubble.png')
+# Paths
+IMG_DIR = os.path.join(os.path.dirname(__file__), 'img')
+IMGPATH_FROG_IDLE = os.path.join(IMG_DIR, 'frog.png')
+IMGPATH_FROG_LEFT = os.path.join(IMG_DIR, 'frog-left.gif')
+IMGPATH_FROG_RIGHT = os.path.join(IMG_DIR, 'frog-right.gif')
+IMGPATH_BUBBLE = os.path.join(IMG_DIR, 'bubble.png')
 
-# initialize window
+# Initialize window
 WINDOW = tkinter.Tk()
-WINDOW_WIDTH = 0
-WINDOW_HEIGHT = 0
+WINDOW.configure(bg='')
+WINDOW.overrideredirect(True)
+WINDOW.focus_force()
+WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
+WINDOW.wm_attributes("-topmost", True)
+
 SCREEN_WIDTH = WINDOW.winfo_screenwidth()
 SCREEN_HEIGHT = WINDOW.winfo_screenheight()
 
-# make it so theres no background
-WINDOW.configure(bg='')
-
-# removes the program header
-WINDOW.overrideredirect(True)
-
-# make it so you can exit the program using the escape key
-WINDOW.focus_force()
-WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
-
-# set start location
-START_POSITION_X = 0
-START_POSITION_Y = 0
-
-# Keep track of current location
+# State variables
 CURRENT_POSITION_X = 0
 CURRENT_POSITION_Y = 0
-
-# Movement state
 CURRENT_BEHAVIOR = "idle"  # "idle", "walk_left", "walk_right"
-SPEED = 3  # pixels per movement step
+SPEED = 3  # pixels per step
 
-# Image initialization
-IMG = None
+# Images
+IMG_IDLE = None
+FRAMES_LEFT = []
+FRAMES_RIGHT = []
+CURRENT_FRAMES = []
+CURRENT_FRAME_INDEX = 0
+LABEL = None
+
+# Bubble
 BUBBLE_IMG = None
 BUBBLE_WINDOW = None
 
-WINDOW.wm_attributes("-topmost", True)
+def load_gif_frames(path):
+    """Extract all frames from a GIF."""
+    frames = []
+    try:
+        with Image.open(path) as img:
+            while True:
+                frame = ImageTk.PhotoImage(img.copy().convert("RGBA"))
+                frames.append(frame)
+                img.seek(len(frames))  # go to next frame
+    except EOFError:
+        pass
+    return frames
 
-# Start the program by setting all the values to what they should be
 def wake_up():
-    global IMG, WINDOW_WIDTH, WINDOW_HEIGHT, START_POSITION_X, START_POSITION_Y, CURRENT_POSITION_X, CURRENT_POSITION_Y
+    global IMG_IDLE, FRAMES_LEFT, FRAMES_RIGHT
+    global CURRENT_POSITION_X, CURRENT_POSITION_Y, LABEL, WINDOW_WIDTH, WINDOW_HEIGHT
 
-    if not os.path.exists(IMGPATH_FROG):
-        raise FileNotFoundError(f"Image file not found: {IMGPATH_FROG}")
+    # Load images
+    if not os.path.exists(IMGPATH_FROG_IDLE):
+        raise FileNotFoundError(IMGPATH_FROG_IDLE)
+    if not os.path.exists(IMGPATH_FROG_LEFT):
+        raise FileNotFoundError(IMGPATH_FROG_LEFT)
+    if not os.path.exists(IMGPATH_FROG_RIGHT):
+        raise FileNotFoundError(IMGPATH_FROG_RIGHT)
 
-    IMG = tkinter.PhotoImage(file=IMGPATH_FROG)
+    IMG_IDLE = tkinter.PhotoImage(file=IMGPATH_FROG_IDLE)
+    FRAMES_LEFT = load_gif_frames(IMGPATH_FROG_LEFT)
+    FRAMES_RIGHT = load_gif_frames(IMGPATH_FROG_RIGHT)
 
-    # Set the width and height
-    WINDOW_WIDTH = IMG.width()
-    WINDOW_HEIGHT = IMG.height()
+    WINDOW_WIDTH = IMG_IDLE.width()
+    WINDOW_HEIGHT = IMG_IDLE.height()
 
-    # Set the start position
-    START_POSITION_X = SCREEN_WIDTH - WINDOW_WIDTH - 50
-    START_POSITION_Y = SCREEN_HEIGHT - WINDOW_HEIGHT - 50
+    CURRENT_POSITION_X = SCREEN_WIDTH - WINDOW_WIDTH - 50
+    CURRENT_POSITION_Y = SCREEN_HEIGHT - WINDOW_HEIGHT - 50
 
-    # make a label with a white background
-    label = tkinter.Label(image=IMG, bg='white', bd=0)
-    label.pack()
+    LABEL = tkinter.Label(image=IMG_IDLE, bg='white', bd=0)
+    LABEL.pack()
 
-    CURRENT_POSITION_X = START_POSITION_X
-    CURRENT_POSITION_Y = START_POSITION_Y
-
-    # Set the location
-    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{START_POSITION_X}+{START_POSITION_Y}')
-
-    # Make white transparent
+    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
     WINDOW.wm_attributes('-transparentcolor', 'white')
-
 
 def chatbubble():
     global BUBBLE_IMG, BUBBLE_WINDOW
 
     if not os.path.exists(IMGPATH_BUBBLE):
-        raise FileNotFoundError(f"Image file not found: {IMGPATH_BUBBLE}")
+        raise FileNotFoundError(IMGPATH_BUBBLE)
 
-    # Create a second window
     BUBBLE_WINDOW = tkinter.Toplevel(WINDOW)
     BUBBLE_WINDOW.overrideredirect(True)
     BUBBLE_WINDOW.focus_force()
     BUBBLE_WINDOW.bind("<Escape>", lambda e: WINDOW.destroy())
     BUBBLE_WINDOW.wm_attributes("-topmost", True)
 
-    # Make it so the background is transparent
     pil_image = Image.open(IMGPATH_BUBBLE).convert("RGBA")
     BUBBLE_IMG = ImageTk.PhotoImage(pil_image)
 
-    # Position based on frog location
     bubble_x = CURRENT_POSITION_X - 50
     bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
 
-    # Set label
-    label = tkinter.Label(BUBBLE_WINDOW, image=BUBBLE_IMG, bg='black', bd=0) 
+    label = tkinter.Label(BUBBLE_WINDOW, image=BUBBLE_IMG, bg='black', bd=0)
     label.pack()
 
-    # Place window
     BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
-
-    # Make black transparent
     BUBBLE_WINDOW.wm_attributes('-transparentcolor', 'black')
-
 
 def change_behaviour():
     """Randomly switch between idle, walking left, or walking right."""
     global CURRENT_BEHAVIOR
     CURRENT_BEHAVIOR = random.choice(["idle", "walk_left", "walk_right"])
-    print(f"New behavior: {CURRENT_BEHAVIOR}")  # Debug log
-
-    # Schedule the next behavior change in 3-6 seconds
+    print(f"Now performing: {CURRENT_BEHAVIOR}")
     WINDOW.after(random.randint(3000, 6000), change_behaviour)
 
+def animate_frog():
+    """Display the next frame of the frog animation."""
+    global CURRENT_FRAME_INDEX
+
+    if CURRENT_BEHAVIOR == "walk_left":
+        frames = FRAMES_LEFT
+    elif CURRENT_BEHAVIOR == "walk_right":
+        frames = FRAMES_RIGHT
+    else:
+        LABEL.configure(image=IMG_IDLE)
+        WINDOW.after(150, animate_frog)
+        return
+
+    if not frames:
+        return
+
+    LABEL.configure(image=frames[CURRENT_FRAME_INDEX])
+    CURRENT_FRAME_INDEX = (CURRENT_FRAME_INDEX + 1) % len(frames)
+
+    WINDOW.after(120, animate_frog)  # adjust speed if needed
 
 def move_frog():
     """Move the frog smoothly based on current behavior."""
@@ -124,24 +141,20 @@ def move_frog():
     elif CURRENT_BEHAVIOR == "walk_right":
         CURRENT_POSITION_X = min(SCREEN_WIDTH - WINDOW_WIDTH, CURRENT_POSITION_X + SPEED)
 
-    # Make bubble follow frog
     bubble_x = CURRENT_POSITION_X - 50
     bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
     BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
-
-    # Update window position
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
 
-    # Schedule the next frame
-    WINDOW.after(50, move_frog)  # Runs about 20 frames per second
+    WINDOW.after(50, move_frog)
 
-
-def main(): 
+def main():
     try:
         wake_up()
         chatbubble()
-        change_behaviour()  # Start behavior switching
-        move_frog()         # Start movement loop
+        change_behaviour()
+        move_frog()
+        animate_frog()
         WINDOW.mainloop()
     except Exception as e:
         print(f"An error occurred: {e}")
