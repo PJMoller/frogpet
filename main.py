@@ -24,14 +24,13 @@ SCREEN_HEIGHT = WINDOW.winfo_screenheight()
 # State variables
 CURRENT_POSITION_X = 0
 CURRENT_POSITION_Y = 0
-CURRENT_BEHAVIOR = "idle"  # "idle", "walk_left", "walk_right"
+CURRENT_BEHAVIOR = "idle"  # idle, walk_left, walk_right, talk
 SPEED = 3  # pixels per step
 
 # Images
 IMG_IDLE = None
 FRAMES_LEFT = []
 FRAMES_RIGHT = []
-CURRENT_FRAMES = []
 CURRENT_FRAME_INDEX = 0
 LABEL = None
 
@@ -47,7 +46,7 @@ def load_gif_frames(path):
             while True:
                 frame = ImageTk.PhotoImage(img.copy().convert("RGBA"))
                 frames.append(frame)
-                img.seek(len(frames))  # go to next frame
+                img.seek(len(frames))  # next frame
     except EOFError:
         pass
     return frames
@@ -104,10 +103,19 @@ def chatbubble():
     BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
     BUBBLE_WINDOW.wm_attributes('-transparentcolor', 'black')
 
+def update_bubble_visibility():
+    """Show bubble only when frog is talking."""
+    if BUBBLE_WINDOW:
+        if CURRENT_BEHAVIOR == "talk":
+            BUBBLE_WINDOW.deiconify()  # show bubble
+        else:
+            BUBBLE_WINDOW.withdraw()   # hide bubble
+    WINDOW.after(200, update_bubble_visibility)
+
 def change_behaviour():
-    """Randomly switch between idle, walking left, or walking right."""
+    """Randomly switch between behaviors."""
     global CURRENT_BEHAVIOR
-    CURRENT_BEHAVIOR = random.choice(["idle", "walk_left", "walk_right"])
+    CURRENT_BEHAVIOR = random.choice(["idle", "walk_left", "walk_right", "talk"])
     print(f"Now performing: {CURRENT_BEHAVIOR}")
     WINDOW.after(random.randint(3000, 6000), change_behaviour)
 
@@ -130,7 +138,7 @@ def animate_frog():
     LABEL.configure(image=frames[CURRENT_FRAME_INDEX])
     CURRENT_FRAME_INDEX = (CURRENT_FRAME_INDEX + 1) % len(frames)
 
-    WINDOW.after(120, animate_frog)  # adjust speed if needed
+    WINDOW.after(120, animate_frog)
 
 def move_frog():
     """Move the frog smoothly based on current behavior."""
@@ -141,17 +149,20 @@ def move_frog():
     elif CURRENT_BEHAVIOR == "walk_right":
         CURRENT_POSITION_X = min(SCREEN_WIDTH - WINDOW_WIDTH, CURRENT_POSITION_X + SPEED)
 
-    bubble_x = CURRENT_POSITION_X - 50
-    bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
-    BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
-    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
+    # Update bubble position if it exists
+    if BUBBLE_IMG and BUBBLE_WINDOW:
+        bubble_x = CURRENT_POSITION_X - 50
+        bubble_y = CURRENT_POSITION_Y - BUBBLE_IMG.height() + 20
+        BUBBLE_WINDOW.geometry(f'{BUBBLE_IMG.width()}x{BUBBLE_IMG.height()}+{bubble_x}+{bubble_y}')
 
+    WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
     WINDOW.after(50, move_frog)
 
 def main():
     try:
         wake_up()
         chatbubble()
+        update_bubble_visibility()
         change_behaviour()
         move_frog()
         animate_frog()
