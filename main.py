@@ -133,7 +133,7 @@ def set_bubble_text(text: str):
     center_x = (img.width - text_w) // 2
     center_y = (img.height - text_h) // 2
 
-    draw.text((center_x, center_y - 5), text, font=font, fill=(0, 0, 0, 255))
+    draw.text((center_x, center_y - 15), text, font=font, fill=(0, 0, 0, 255))
 
     BUBBLE_IMG = ImageTk.PhotoImage(img)
     BUBBLE_LABEL.configure(image=BUBBLE_IMG)
