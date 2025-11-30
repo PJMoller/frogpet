@@ -1,2 +1,4 @@
 pillow
 tk
+pywin32
+psutil
