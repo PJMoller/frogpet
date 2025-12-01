@@ -125,7 +125,7 @@ def update_bubble_visibility():
         if CURRENT_BEHAVIOR == "talk":
             BUBBLE_WINDOW.deiconify()
             if LAST_BUBBLE_TEXT == "":
-                phrases = ["Hello!", "Ribbit!", "What's up?", "Nice day!", "I'm a frog!", "Boing!"]
+                phrases = ["Hello!", "Ribbit!", "What's up?", "I'm a frog!", "Boing!"]
                 if MOST_USED_APP:
                     phrases.append(f"{MOST_USED_APP} is wonderful!")
                 line = random.choice(phrases)
