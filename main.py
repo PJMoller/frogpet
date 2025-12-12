@@ -6,6 +6,9 @@ import win32gui
 import win32process
 import psutil
 from collections import Counter
+from ollama import chat
+
+USELLM = True
 
 IMG_DIR = os.path.join(os.path.dirname(__file__), 'img')
 IMGPATH_FROG_IDLE = os.path.join(IMG_DIR, 'frog.png')
@@ -43,6 +46,56 @@ LAST_BUBBLE_TEXT = ""
 APP_USAGE = Counter()
 MOST_USED_APP = None
 
+NEXT_LLM_TEXT = None
+IS_GENERATING = False
+
+
+def get_llm_fact(app):
+    try:
+        if app:
+            prompt = (
+                f"Give a concise fun fact about {app} in 10 words or less. "
+                "Do not add greetings, emojis, or extra commentary. "
+                "Output only the fact."
+            )
+        else:
+            prompt = (
+                "Give a concise fun fact in 10 words or less. "
+                "Do not add greetings, emojis, or extra commentary. "
+                "Output only the fact."
+            )
+
+        response = chat(
+            model='gemma3:12b',
+            messages=[{'role': 'user', 'content': prompt}]
+        )
+        return response.message.content.strip()
+    except:
+        return None
+
+
+def generate_next_llm_text():
+    global NEXT_LLM_TEXT, IS_GENERATING, MOST_USED_APP
+
+    if IS_GENERATING:
+        WINDOW.after(6000, generate_next_llm_text)
+        return
+
+    IS_GENERATING = True
+
+    def task():
+        global NEXT_LLM_TEXT, IS_GENERATING
+        try:
+            NEXT_LLM_TEXT = get_llm_fact(MOST_USED_APP)
+        except:
+            NEXT_LLM_TEXT = None
+        IS_GENERATING = False
+
+    import threading
+    threading.Thread(target=task, daemon=True).start()
+    WINDOW.after(6000, generate_next_llm_text)
+
+
 def load_gif_frames(path):
     frames = []
     try:
@@ -54,6 +107,7 @@ def load_gif_frames(path):
     except EOFError:
         pass
     return frames
+
 
 def wake_up():
     global IMG_IDLE, FRAMES_LEFT, FRAMES_RIGHT
@@ -75,6 +129,7 @@ def wake_up():
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
     WINDOW.wm_attributes('-transparentcolor', 'white')
 
+
 def chatbubble():
     global BUBBLE_IMG, BUBBLE_WINDOW, BUBBLE_LABEL, BUBBLE_BASE
 
@@ -95,7 +150,8 @@ def chatbubble():
     BUBBLE_WINDOW.geometry(f'{BUBBLE_BASE.width}x{BUBBLE_BASE.height}+{bubble_x}+{bubble_y}')
     BUBBLE_WINDOW.wm_attributes('-transparentcolor', 'black')
 
-def set_bubble_text(text: str):
+
+def set_bubble_text(text):
     global BUBBLE_IMG, LAST_BUBBLE_TEXT
     if text == LAST_BUBBLE_TEXT:
         return
@@ -103,46 +159,77 @@ def set_bubble_text(text: str):
 
     img = BUBBLE_BASE.copy()
     draw = ImageDraw.Draw(img)
+
     try:
         font = ImageFont.truetype("arial.ttf", 16)
     except:
         font = ImageFont.load_default()
 
-    bbox = draw.textbbox((0,0), text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
+    max_width = img.width - 40
+    words = text.split()
+    lines = []
+    current_line = ""
 
-    cx = (img.width - text_w)//2
-    cy = (img.height - text_h)//2
-    draw.text((cx, cy - 15), text, font=font, fill=(0,0,0,255))
+    for word in words:
+        test = current_line + (" " if current_line else "") + word
+        bbox = draw.textbbox((0, 0), test, font=font)
+        if bbox[2] - bbox[0] <= max_width:
+            current_line = test
+        else:
+            lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    total_h = len(lines) * (font.size + 4)
+    start_y = (img.height - total_h) // 2
+
+    for i, line in enumerate(lines):
+        bbox = draw.textbbox((0, 0), line, font=font)
+        lw = bbox[2] - bbox[0]
+        x = (img.width - lw) // 2
+        y = start_y + i * (font.size + 4)
+        draw.text((x, y), line, font=font, fill=(0, 0, 0, 255))
 
     BUBBLE_IMG = ImageTk.PhotoImage(img)
     BUBBLE_LABEL.configure(image=BUBBLE_IMG)
 
+
 def update_bubble_visibility():
-    global LAST_BUBBLE_TEXT
+    global LAST_BUBBLE_TEXT, NEXT_LLM_TEXT
+
     if BUBBLE_WINDOW:
         if CURRENT_BEHAVIOR == "talk":
             BUBBLE_WINDOW.deiconify()
+
             if LAST_BUBBLE_TEXT == "":
-                phrases = ["Hello!", "Ribbit!", "What's up?", "I'm a frog!", "Boing!"]
-                if MOST_USED_APP:
-                    phrases.append(f"{MOST_USED_APP} is wonderful!")
-                line = random.choice(phrases)
+                if USELLM and NEXT_LLM_TEXT:
+                    line = NEXT_LLM_TEXT
+                    NEXT_LLM_TEXT = None
+                else:
+                    phrases = ["Hello!", "Ribbit!", "What's up?", "I'm a frog!", "Boing!"]
+                    line = random.choice(phrases)
+
                 set_bubble_text(line)
+
         else:
             LAST_BUBBLE_TEXT = ""
             BUBBLE_WINDOW.withdraw()
+
     WINDOW.after(200, update_bubble_visibility)
+
 
 def change_behaviour():
     global CURRENT_BEHAVIOR
     CURRENT_BEHAVIOR = random.choice(["idle", "walk_left", "walk_right", "talk"])
-    print(f"Now performing: {CURRENT_BEHAVIOR}")
-    WINDOW.after(random.randint(3000,6000), change_behaviour)
+    print("Now performing:", CURRENT_BEHAVIOR)
+    WINDOW.after(random.randint(3000, 6000), change_behaviour)
+
 
 def animate_frog():
     global CURRENT_FRAME_INDEX
+
     if CURRENT_BEHAVIOR == "walk_left":
         frames = FRAMES_LEFT
     elif CURRENT_BEHAVIOR == "walk_right":
@@ -159,8 +246,10 @@ def animate_frog():
     CURRENT_FRAME_INDEX = (CURRENT_FRAME_INDEX + 1) % len(frames)
     WINDOW.after(120, animate_frog)
 
+
 def move_frog():
     global CURRENT_POSITION_X
+
     if CURRENT_BEHAVIOR == "walk_left":
         CURRENT_POSITION_X = max(0, CURRENT_POSITION_X - SPEED)
     elif CURRENT_BEHAVIOR == "walk_right":
@@ -174,6 +263,7 @@ def move_frog():
     WINDOW.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{CURRENT_POSITION_X}+{CURRENT_POSITION_Y}')
     WINDOW.after(50, move_frog)
 
+
 def get_active_application_name():
     try:
         hwnd = win32gui.GetForegroundWindow()
@@ -181,10 +271,10 @@ def get_active_application_name():
             return None
         _, pid = win32process.GetWindowThreadProcessId(hwnd)
         process = psutil.Process(pid)
-        name = os.path.splitext(process.name())[0].capitalize()
-        return name
+        return os.path.splitext(process.name())[0].capitalize()
     except:
         return None
+
 
 def track_application_usage():
     global MOST_USED_APP
@@ -194,10 +284,12 @@ def track_application_usage():
         MOST_USED_APP = APP_USAGE.most_common(1)[0][0]
     WINDOW.after(2000, track_application_usage)
 
+
 def main():
     try:
         wake_up()
         chatbubble()
+        generate_next_llm_text()
         update_bubble_visibility()
         change_behaviour()
         move_frog()
@@ -205,8 +297,9 @@ def main():
         track_application_usage()
         WINDOW.mainloop()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print("An error occurred:", e)
         input("Press Enter to exit...")
+
 
 if __name__ == "__main__":
     main()
