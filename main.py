@@ -54,13 +54,13 @@ def get_llm_fact(app):
     try:
         if app:
             prompt = (
-                f"Give a concise fun fact about {app} in 10 words or less. "
+                f"Give a concise fun fact about {app} in 10 words or less. Make the fact entirely random, so that its different facts about the program. Make sure to mention {app} in response"
                 "Do not add greetings, emojis, or extra commentary. "
                 "Output only the fact."
             )
         else:
             prompt = (
-                "Give a concise fun fact in 10 words or less. "
+                "Give a concise fun fact in 10 words or less. Make the fact entirely random "
                 "Do not add greetings, emojis, or extra commentary. "
                 "Output only the fact."
             )
@@ -189,7 +189,7 @@ def set_bubble_text(text):
         bbox = draw.textbbox((0, 0), line, font=font)
         lw = bbox[2] - bbox[0]
         x = (img.width - lw) // 2
-        y = start_y + i * (font.size + 4)
+        y = start_y + i * (font.size + 4) + 10
         draw.text((x, y), line, font=font, fill=(0, 0, 0, 255))
 
     BUBBLE_IMG = ImageTk.PhotoImage(img)
